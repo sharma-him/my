@@ -1,0 +1,75 @@
+{
+	"info": {
+		"_postman_id": "91925778-d1da-43c0-8d4a-1e2830d53ab1",
+		"name": "Production Member Search",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Production Member Search with Policy No",
+			"item": [
+				{
+					"name": "https://userlingo.int.userlingo.optum.com/rest/v2/hcp/read/prod",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "User-Agent",
+								"value": "Insomnia/2023.5.7"
+							},
+							{
+								"key": "x-ask-id",
+								"value": "UHGWM110-017123"
+							},
+							{
+								"key": "x-organization",
+								"value": "Optum"
+							},
+							{
+								"key": "x-userlingo-team",
+								"value": "DataKart"
+							},
+							{
+								"key": "x-userlingo-user",
+								"value": "tapan_k_saha@optum.com"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json",
+								"type": "default",
+								"disabled": true
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"schema\": \"prodHcpIndividualQuery\",\n    \"searchId\": null,\n    \"policyNumber\": null,\n    \"effectiveDate\": \"2024-01-01\",\n    \"terminationDate\": \"9999-12-31\",\n    \"fundingTypeCode\": \"F\",\n    \"insuranceType\": \"C\",\n    \"stateIssueCode\": \"LA\",\n    \"situsState\": \"LA\",\n    \"lineOfBusiness\": \"EI\",\n    \"medicareIndicator\": null,\n    \"page\": 1,\n    \"pageSize\": 10\n}"
+						},
+						"url": {
+							"raw": "https://userlingo.int.userlingo.optum.com/rest/v2/hcp/read/prod",
+							"protocol": "https",
+							"host": [
+								"userlingo",
+								"int",
+								"userlingo",
+								"optum",
+								"com"
+							],
+							"path": [
+								"rest",
+								"v2",
+								"hcp",
+								"read",
+								"prod"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
