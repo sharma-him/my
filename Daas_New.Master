@@ -1,0 +1,118 @@
+﻿<%@ Master Language="C#" AutoEventWireup="true" CodeBehind="Daas_New.master.cs" Inherits="DaasPortal.DKPlus.Daas_New" %>
+
+
+
+<%@ Register TagName="ucDaasTopBar" TagPrefix="ucDaasTop" Src="~/DKPlus/DaaSTopBar_New.ascx" %>
+<%@ Register TagName="ucDaasSidemenu" TagPrefix="ucSideMenu" Src="~/DKPlus/DaasSideMenu_New.ascx" %>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>DAAS</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" type="text/css" href="../css/responsivestyle.css" />
+    <link rel="stylesheet" type="text/css" href="../css/custom.css" />
+    <link rel="stylesheet" type="text/css" href="../css/style_dk_search.css" />
+    <script type="text/javascript" src="../js/Common/jquery3.2.1.min.js"></script>
+    <script type="text/javascript" src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="http://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css" />
+    <script src="../js/Common/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../js/Common/processingImage.js"></script>
+    <script type="text/javascript" src="../js/Common/json2.js"></script>
+    <script type="text/javascript" src="../js/Common/linq.js"></script>
+    <script type="text/javascript" src="../js/jquery.datePicker.js"></script>
+    <script type="text/javascript" src="../date/date.js"></script>
+    <script src="../Scripts/metrics.js" type="text/javascript"></script>
+    <link rel="stylesheet" type="text/css" href="../css/datePicker.css" />
+    <link rel="stylesheet" type="text/css" href="../css/components.css" />
+    <link rel="stylesheet" type="text/css" href="../css/style_common.css" />
+
+
+    <asp:ContentPlaceHolder ID="head" runat="server">
+        <%--<link rel="stylesheet" href="css/responsee.css" />--%>
+    </asp:ContentPlaceHolder>
+    <script>
+        $(document).ready(function () {
+            var scrollTop = 0;
+            $(window).scroll(function () {
+                scrollTop = $(window).scrollTop();
+                if (scrollTop >= 100) {
+                    $('#menu').addClass('scrolled-nav');
+                } else if (scrollTop < 100) {
+                    $('#menu').removeClass('scrolled-nav');
+                }
+
+            });
+
+        });
+        $(document).ready(function () { $("input").attr("autocomplete", "off"); });
+
+
+    </script>
+
+    <script type="text/javascript">
+        $(function () {
+            $("#dialog").dialog({
+                autoOpen: false,
+                modal: true,
+                title: "Session Expiring",
+                buttons: {
+                    Ok: function () {
+                        ResetSession();
+                    },
+                    Close: function () {
+                        $(this).dialog('close');
+                    }
+                }
+            });
+        });
+        function SessionExpireAlert(timeout) {
+            var seconds = timeout / 1000;
+            $("#secondsIdle").html(seconds);
+            $("#seconds").html(seconds);
+            setInterval(function () {
+                seconds--;
+                $("#secondsIdle").html(seconds);
+                $("#seconds").html(seconds);
+            }, 1000);
+            setTimeout(function () {
+                //Show Popup before 20 seconds of timeout.
+                $('#dialog').dialog('open');
+            }, timeout - 20 * 1000);
+            setTimeout(function () {
+                window.location = "default.aspx";
+            }, timeout);
+        };
+        function ResetSession() {
+            //Redirect to refresh Session.
+            window.location = window.location.href;
+        };
+    </script>
+
+</head>
+<body class="marginTop0px">
+    <div class="container-fluid">
+        <div class="row">
+            <form id="form1" runat="server">
+                <div class="vicsWebWidth">
+                    <ucDaasTop:ucDaasTopBar ID="daasTop" runat="server" />
+                </div>
+                <div class="content_body">
+                    <ucSideMenu:ucDaasSidemenu ID="DaasSide" runat="server" />
+                    <div class="vicsContentWidth" style="float: left;" id="dvContainer">
+
+                        <asp:ContentPlaceHolder ID="ContentPlaceHolder1" runat="server">
+                        </asp:ContentPlaceHolder>
+
+                       
+
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>
+
