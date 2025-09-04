@@ -1,0 +1,20 @@
+private List<MemberRow> FetchFromApi(object payload)
+{
+    // Ensure TLS 1.2
+    System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
+    using (var client = new HttpClient())
+    {
+        client.DefaultRequestHeaders.Add("x-ask-id", askId);
+        client.DefaultRequestHeaders.Add("x-organization", org);
+        client.DefaultRequestHeaders.Add("x-userlingo-team", team);
+        client.DefaultRequestHeaders.Add("x-userlingo-user", user);
+
+        var content = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
+        var resp = client.PostAsync(apiUrl, content).Result;
+        var respString = resp.Content.ReadAsStringAsync().Result;
+
+        if (!resp.IsSuccessStatusCode)
+            throw new ApplicationException(respString);
+
+        // ... existing JSON parsing ...
