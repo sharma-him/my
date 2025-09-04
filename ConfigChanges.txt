@@ -1,0 +1,10 @@
+<configuration>
+  <appSettings>
+    <!-- Production Member Search API -->
+    <add key="ProdMemberSearch.Endpoint" value="https://userlingo.int.userlingo.optum.com/rest/v2/hcp/read/prod" />
+    <add key="ProdMemberSearch.AskId" value="UHGWM110-017123" />
+    <add key="ProdMemberSearch.Organization" value="Optum" />
+    <add key="ProdMemberSearch.Team" value="DataKart" />
+    <add key="ProdMemberSearch.User" value="tapan_k_saha@optum.com" />
+  </appSettings>
+</configuration>
