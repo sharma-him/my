@@ -1,0 +1,50 @@
+protected void btnSearch_Click(object sender, EventArgs e)
+{
+    grdMemberSearch.PageIndex = 0;
+    BindGrid();
+}
+
+protected void grdMemberSearch_PageIndexChanging(object sender, GridViewPageEventArgs e)
+{
+    grdMemberSearch.PageIndex = e.NewPageIndex;
+    BindGrid();
+}
+
+private void BindGrid()
+{
+    int pageIndex = grdMemberSearch.PageIndex + 1;
+    int pageSize = int.Parse(ddlPageSize.SelectedValue);
+
+    var criteria = new SearchCriteria
+    {
+        PolicyNumber = txtPolicyNumber.Text,
+        StateIssueCode = txtState.Text,
+        LineOfBusiness = txtLob.Text,
+        Page = pageIndex,
+        PageSize = pageSize
+    };
+
+    try
+    {
+        JavaScriptSerializer serializer = new JavaScriptSerializer();
+        Dictionary<string, object> strObject = new Dictionary<string, object>();
+        strObject.Add("criteria", criteria);
+
+        object data = strObject;
+
+        // Call WCF via your existing processCall utility
+        object returnObj = WCFServiceCallPage.processCall("DKPLUS", "SearchMembers", data);
+
+        // Deserialize response
+        var rows = serializer.Deserialize<List<MemberRow>>(returnObj.ToString());
+
+        grdMemberSearch.DataSource = rows;
+        grdMemberSearch.DataBind();
+        divMemberSearch.Visible = true;
+    }
+    catch (Exception ex)
+    {
+        divMemberSearch.Visible = false;
+        Response.Write($"<script>alert('Error: {ex.Message}');</script>");
+    }
+}
