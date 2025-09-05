@@ -1,0 +1,195 @@
+🔹 Step 1: Define new contract in IDKPlus.cs
+using System.Collections.Generic;
+using System.ServiceModel;
+using Daas_Entities;
+
+namespace Daas_Service
+{
+    public partial interface IDKPlus
+    {
+        [OperationContract]
+        List<MemberRow> SearchMembers(SearchCriteria criteria);
+    }
+}
+
+🔹 Step 2: Implement in DKPlus.svc.cs
+using System.Collections.Generic;
+using Daas_BL;
+using Daas_Entities;
+
+namespace Daas_Service
+{
+    public partial class DKPlus : IDKPlus
+    {
+        public List<MemberRow> SearchMembers(SearchCriteria criteria)
+        {
+            var bl = new MemberSearchBL();
+            return bl.SearchMembers(criteria);
+        }
+    }
+}
+🔹 Step 3: Add Business Logic in Daas_BL
+MemberSearchBL.cs
+using System.Collections.Generic;
+using Daas_Entities;
+using Daas_DAL;
+
+namespace Daas_BL
+{
+    public class MemberSearchBL
+    {
+        public List<MemberRow> SearchMembers(SearchCriteria criteria)
+        {
+            var dal = new MemberSearchDAL();
+            return dal.SearchMembers(criteria);
+        }
+    }
+}
+🔹 Step 4: Add DAL class in Daas_DAL
+MemberSearchDAL.cs
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Net.Http;
+using System.Text;
+using Daas_Entities;
+
+namespace Daas_DAL
+{
+    public class MemberSearchDAL
+    {
+        private readonly string apiUrl = ConfigurationManager.AppSettings["ProdMemberSearch.Endpoint"];
+        private readonly string askId = ConfigurationManager.AppSettings["ProdMemberSearch.AskId"];
+        private readonly string org = ConfigurationManager.AppSettings["ProdMemberSearch.Organization"];
+        private readonly string team = ConfigurationManager.AppSettings["ProdMemberSearch.Team"];
+        private readonly string user = ConfigurationManager.AppSettings["ProdMemberSearch.User"];
+
+        public List<MemberRow> SearchMembers(SearchCriteria criteria)
+        {
+            System.Net.ServicePointManager.SecurityProtocol = System.Net.SecurityProtocolType.Tls12;
+
+            var payload = new
+            {
+                schema = "prodHcpIndividualQuery",
+                searchId = (string)null,
+                policyNumber = criteria.PolicyNumber,
+                effectiveDate = "2024-01-01",
+                terminationDate = "9999-12-31",
+                fundingTypeCode = "F",
+                insuranceType = "C",
+                stateIssueCode = criteria.StateIssueCode,
+                situsState = criteria.StateIssueCode,
+                lineOfBusiness = criteria.LineOfBusiness,
+                medicareIndicator = (string)null,
+                page = criteria.Page,
+                pageSize = criteria.PageSize
+            };
+
+            using (var client = new HttpClient())
+            {
+                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
+                client.DefaultRequestHeaders.Add("x-ask-id", askId);
+                client.DefaultRequestHeaders.Add("x-organization", org);
+                client.DefaultRequestHeaders.Add("x-userlingo-team", team);
+                client.DefaultRequestHeaders.Add("x-userlingo-user", user);
+
+                var content = new StringContent(JsonConvert.SerializeObject(payload), Encoding.UTF8, "application/json");
+                var resp = client.PostAsync(apiUrl, content).Result;
+                var respString = resp.Content.ReadAsStringAsync().Result;
+
+                if (!resp.IsSuccessStatusCode)
+                    throw new ApplicationException(respString);
+
+                return MapResponse(respString);
+            }
+        }
+
+        private List<MemberRow> MapResponse(string json)
+        {
+            var j = JObject.Parse(json);
+            var rows = new List<MemberRow>();
+
+            var eligibilities = j["data"]?["eligibilities"] as JArray;
+            if (eligibilities != null)
+            {
+                foreach (var elig in eligibilities)
+                {
+                    var sourceInd = elig["sourceIndividual"];
+                    var alt = sourceInd?["alternateIdentifiers"];
+                    var subs = alt?["subscriberIds"] as JArray;
+                    string subscriberId = (subs != null && subs.Count > 0) ? (string)subs[0]["identifier"] : "";
+                    string enterpriseId = (string)(alt?["enterpriseIndividualIdentifier"] ?? "");
+                    string customerNumber = (string)(sourceInd?["legacyAttributes"]?["customerNumber"] ?? "");
+
+                    string town = "";
+                    string state = "";
+                    var addresses = sourceInd?["postalAddresses"] as JArray;
+                    if (addresses != null && addresses.Count > 0)
+                    {
+                        town = (string)(addresses[0]?["townName"] ?? "");
+                        state = (string)(addresses[0]?["stateProvinceCode"] ?? "");
+                    }
+
+                    var memberships = elig["memberships"] as JArray;
+                    if (memberships != null && memberships.Count > 0)
+                    {
+                        foreach (var m in memberships)
+                        {
+                            string planCoverage = (string)(m["customerAccount"]?["planCoverageIdentifier"] ?? "");
+                            if (string.IsNullOrEmpty(planCoverage))
+                                planCoverage = (string)(m["customerAccount"]?["customerAccountIdentifier"] ?? "");
+
+                            string eff = (string)(m["effectiveDate"] ?? "");
+                            string term = (string)(m["terminationDate"] ?? "");
+
+                            rows.Add(new MemberRow
+                            {
+                                SubscriberId = subscriberId,
+                                EnterpriseId = enterpriseId,
+                                CustomerNumber = customerNumber,
+                                PlanCoverageIdentifier = planCoverage,
+                                EffectiveDate = eff,
+                                TerminationDate = term,
+                                Town = town,
+                                State = state
+                            });
+                        }
+                    }
+                }
+            }
+
+            return rows;
+        }
+    }
+}
+🔹 Step 5: Entities in Daas_Entities
+SearchCriteria.cs
+namespace Daas_Entities
+{
+    public class SearchCriteria
+    {
+        public string PolicyNumber { get; set; }
+        public string StateIssueCode { get; set; }
+        public string LineOfBusiness { get; set; }
+        public int Page { get; set; }
+        public int PageSize { get; set; }
+    }
+}
+MemberRow.cs
+namespace Daas_Entities
+{
+    public class MemberRow
+    {
+        public string SubscriberId { get; set; }
+        public string EnterpriseId { get; set; }
+        public string CustomerNumber { get; set; }
+        public string PlanCoverageIdentifier { get; set; }
+        public string EffectiveDate { get; set; }
+        public string TerminationDate { get; set; }
+        public string Town { get; set; }
+        public string State { get; set; }
+    }
+}
